@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antony's 1H NMR Impurity Chemical Shift Search</title>
+  <link href="https://fonts.googleapis.com/css?family=Lato&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Lato', sans-serif;
+      position: relative;
+      min-height: 100vh;
+    }
+  
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 40px); /* Subtracting the height of the watermark */
+      flex-direction: column;
+    }
+  
+    h1 {
+      margin-bottom: 30px;
+    }
+  
+    #solventSelect {
+      margin-bottom: 10px;
+    }
+  
+    #shiftInput {
+      margin-bottom: 10px;
+    }
+  
+    .results {
+      margin-top: 20px;
+      text-align: center;
+    }
+  
+    .watermark {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 40px; /* Adjust the height as needed */
+      line-height: 40px; /* Match the height value */
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.1); /* Optional: semi-transparent background */
+      color: #000;
+      font-size: 14px;
+    }
+    .scaled-image {
+  width: 20%; /* Set the image width to 1/5 (20%) of the parent container width */
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="nmr.svg" alt="NMR image" class="scaled-image">
+    <h1><sup>1</sup>H NMR Impurity Chemical Shift Search</h1>
+    <select id="solventSelect">
+      <option value="CDCl3">CDCl3</option>
+      <option value="(CD3)2SO">(CD3)2SO</option>
+      <option value="CD3OD">CD3OD</option>
+      <option value="D2O">D2O</option>
+      <option value="THF-d8">THF-d8</option>
+      <option value="CD2Cl2">CD2Cl2</option>
+      <option value="toluene-d8">toluene-d8</option>
+      <option value="C6D6">C6D6</option>
+      <option value="C6D5Cl">C6D5Cl</option>
+      <option value="(CD3)2CO">(CD3)2CO</option>
+      <option value="CD3CN">CD3CN</option>
+      <option value="TFE-d3">TFE-d3</option>
+    </select>
+    <input type="text" id="shiftInput" placeholder="Enter chemical shift">
+    <button onclick="searchShift()">Search</button>
+    <div class="results" id="results"></div>
+  </div>
+  <script>
+    const data = [
+    {
+        name: "solvent residual signal(s)",
+        values: {
+          "THF-d8": ["1.72", "1.80"],
+          "CD2Cl2": "5.32",
+          "CDCl3": "7.26",
+          "toluene-d8": ["2.08", "6.97", "7.01", "7.09"],
+          "C6D6": "7.16",
+          "C6D5Cl": ["6.96", "6.99", "7.14"],
+          "(CD3)2CO": "2.05",
+          "(CD3)2SO": "2.5",
+          "CD3CN": "1.94",
+          "TFE-d3": ["5.02", "3.88"],
+          "CD3OD": "3.31",
+          "D2O": "4.79",
+        },
+      },
+      {
+        name: "water",
+        values: {
+          "CDCl3": "1.56",
+        },
+      },
+      {
+        name: "chloroform",
+        values: {
+          "THF-d8": "7.89",
+          "CD2Cl2": "7.32",
+          "CDCl3": "7.26",
+          "toluene-d8": "6.1",
+          "C6D6": "6.15",
+          "C6D5Cl": "6.74",
+          "(CD3)2CO": "8.02",
+          "(CD3)2SO": "8.32",
+          "CD3CN": "7.58",
+          "TFE-d3": "7.33",
+          "CD3OD": "7.9",
+          "D2O": "-",
+        },
+      },
+      {
+        name: "18-crown-6",
+        values: {
+          "THF-d8": "3.57",
+          "CD2Cl2": "3.59",
+          "CDCl3": "3.67",
+          "toluene-d8": "3.36",
+          "C6D6": "3.39",
+          "C6D5Cl": "3.41",
+          "(CD3)2CO": "3.59",
+          "(CD3)2SO": "3.51",
+          "CD3CN": "3.51",
+          "TFE-d3": "3.64",
+          "CD3OD": "3.64",
+          "D2O": "3.8",
+        },
+      },
+      {
+        name: "cyclohexane",
+        values: {
+          "THF-d8": "1.44",
+          "CD2Cl2": "1.44",
+          "CDCl3": "1.43",
+          "toluene-d8": "1.4",
+          "C6D6": "1.4",
+          "C6D5Cl": "1.37",
+          "(CD3)2CO": "1.43",
+          "(CD3)2SO": "1.4",
+          "CD3CN": "1.44",
+          "TFE-d3": "1.47",
+          "CD3OD": "1.45",
+          "D2O": "-",
+        },
+      },
+    ];
+
+    function searchShift() {
+      const shiftInput = document.getElementById("shiftInput");
+      const results = document.getElementById("results");
+      const solventSelect = document.getElementById("solventSelect");
+      const selectedSolvent = solventSelect.value;
+      const inputValue = parseFloat(shiftInput.value);
+
+      if (isNaN(inputValue)){
+        results.innerHTML = "Please enter a valid chemical shift.";
+        return;
+      }
+
+      const foundImpurities = data.filter((impurity) => {
+        const impurityShift = parseFloat(impurity.values[selectedSolvent]);
+        return !isNaN(impurityShift) && Math.abs(inputValue - impurityShift) <= 0.10;
+      });
+
+      if (foundImpurities.length === 0) {
+        results.innerHTML = "No impurities found.";
+      } else {
+        const resultList = foundImpurities.map((impurity) => `<li>${impurity.name} (${impurity.values[selectedSolvent]} ppm)</li>`).join("");
+        results.innerHTML = `<ul>${resultList}</ul>`;
+      }
+    }
+  </script>
+  <div class="watermark">
+    Created by Antony Crisp 2023.<br>
+    Fulmer, Gregory R., et al. Organometallics 29.9 (2010): 2176-2179.
+    </div>
+</body>
+</html>
